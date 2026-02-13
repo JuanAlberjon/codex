@@ -1,0 +1,21 @@
+.dmmr-menu {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.dmmr-floating-controls {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  display: flex;
+  gap: .5rem;
+}
+
+.dmmr-fab {
+  border: none;
+  border-radius: 999px;
+  padding: .65rem .9rem;
+  background: #111;
+  color: #fff;
+}

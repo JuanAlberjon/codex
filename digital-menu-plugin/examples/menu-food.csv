@@ -1,0 +1,3 @@
+section_slug,section_order,section_title_es,section_title_en,item_type,item_sku,item_external_id,item_order,item_name_es,item_name_en,item_description_es,item_description_en,price_base,price_options,allergen_slugs
+entrantes,10,Entrantes,Starters,food,F-1001,ext-food-1,10,Croquetas caseras,Homemade croquettes,Crujientes y cremosas,Crunchy and creamy,7.50,,gluten;lactosa
+ensaladas,20,Ensaladas,Salads,food,F-2001,ext-food-2,20,Ensalada César,Caesar salad,Con pollo y parmesano,With chicken and parmesan,10.00,,huevo;lactosa
