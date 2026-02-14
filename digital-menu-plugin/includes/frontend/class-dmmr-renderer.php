@@ -6,6 +6,13 @@ if (!defined('ABSPATH')) {
 
 class DMMR_Frontend_Renderer
 {
+    private DMMR_Repository $repository;
+
+    public function __construct()
+    {
+        $this->repository = new DMMR_Repository();
+    }
+
     public function register(): void
     {
         add_action('wp_enqueue_scripts', [$this, 'enqueue_assets']);
@@ -19,21 +26,25 @@ class DMMR_Frontend_Renderer
 
     public function render_public_page(string $restaurantSlug, string $menuSlug, string $lang): string
     {
-        $menu = $this->resolve_menu($restaurantSlug, $menuSlug);
+        $menu = $this->repository->get_menu_by_slugs($restaurantSlug, $menuSlug);
         if (!$menu) {
             return $this->render_not_found();
         }
 
-        $languages = $this->resolve_languages((int) $menu['id'], (int) $menu['restaurant_id']);
         $defaultLocale = $menu['default_locale'] ?: 'es';
         $activeLocale = $lang !== '' ? $lang : $defaultLocale;
+        $languages = $this->repository->get_languages((int) $menu['restaurant_id'], (int) $menu['id']);
+        if (!$languages) {
+            $languages = [
+                ['locale' => $defaultLocale, 'label' => strtoupper($defaultLocale)],
+            ];
+        }
+
         $isSelectorPage = $lang === '';
+        $sections = $isSelectorPage ? [] : $this->repository->get_sections_with_items((int) $menu['id'], $activeLocale, $defaultLocale);
 
         wp_enqueue_style('dmmr-frontend');
         wp_enqueue_script('dmmr-frontend');
-
-        $designVariant = $menu['design_variant'] ?: 'minimal';
-        $items = $this->demo_items();
 
         ob_start();
         ?>
@@ -45,37 +56,44 @@ class DMMR_Frontend_Renderer
             <title><?php echo esc_html($menu['title']); ?></title>
             <?php wp_head(); ?>
         </head>
-        <body class="dmmr-public dmmr-design-<?php echo esc_attr($designVariant); ?>">
+        <body class="dmmr-public dmmr-design-<?php echo esc_attr($menu['design_variant']); ?>">
         <main class="dmmr-container">
             <header class="dmmr-header">
                 <h1><?php echo esc_html($menu['title']); ?></h1>
-                <?php if (!empty($menu['subtitle'])) : ?>
-                    <p><?php echo esc_html($menu['subtitle']); ?></p>
-                <?php endif; ?>
-                <?php if (!empty($menu['description'])) : ?>
-                    <div><?php echo esc_html($menu['description']); ?></div>
-                <?php endif; ?>
+                <p><?php echo esc_html((string) $menu['subtitle']); ?></p>
             </header>
 
             <?php if ($isSelectorPage) : ?>
                 <section class="dmmr-language-selector-page">
                     <h2>Selecciona idioma</h2>
                     <ul>
-                        <?php foreach ($languages as $locale => $label) : ?>
-                            <li><a href="<?php echo esc_url(DMMR_Router::build_menu_url($restaurantSlug, $menuSlug, $locale)); ?>"><?php echo esc_html($label); ?></a></li>
+                        <?php foreach ($languages as $language) : ?>
+                            <li><a href="<?php echo esc_url(DMMR_Router::build_menu_url($restaurantSlug, $menuSlug, $language['locale'])); ?>"><?php echo esc_html($language['label']); ?></a></li>
                         <?php endforeach; ?>
                     </ul>
                 </section>
             <?php else : ?>
-                <section class="dmmr-menu-list" data-locale="<?php echo esc_attr($activeLocale); ?>">
-                    <?php foreach ($items as $item) : ?>
-                        <article class="dmmr-item" data-allergens="<?php echo esc_attr(implode(',', $item['allergens'])); ?>">
-                            <h3><?php echo esc_html($item['name']); ?></h3>
-                            <p class="dmmr-price"><?php echo esc_html($item['price']); ?></p>
-                            <p class="dmmr-allergens"><?php echo esc_html(implode(', ', $item['allergens'])); ?></p>
-                        </article>
-                    <?php endforeach; ?>
-                </section>
+                <?php foreach ($sections as $section) : ?>
+                    <section class="dmmr-section">
+                        <h2><?php echo esc_html($section['name']); ?></h2>
+                        <?php if (!empty($section['subtitle'])) : ?><p><?php echo esc_html($section['subtitle']); ?></p><?php endif; ?>
+                        <?php foreach ($section['items'] as $item) : ?>
+                            <article class="dmmr-item" data-allergens="<?php echo esc_attr(implode(',', $item['allergens'])); ?>">
+                                <h3><?php echo esc_html($item['name']); ?></h3>
+                                <?php if (!empty($item['description'])) : ?><p><?php echo esc_html($item['description']); ?></p><?php endif; ?>
+                                <?php if ((float) $item['base_price'] > 0) : ?><p class="dmmr-price"><?php echo esc_html(number_format((float) $item['base_price'], 2, ',', '.') . ' €'); ?></p><?php endif; ?>
+                                <?php if (!empty($item['price_options'])) : ?>
+                                    <ul class="dmmr-price-options">
+                                        <?php foreach ($item['price_options'] as $priceOption) : ?>
+                                            <li><?php echo esc_html($priceOption['option_label'] . ': ' . number_format((float) $priceOption['amount'], 2, ',', '.') . ' €'); ?></li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                <?php endif; ?>
+                                <?php if (!empty($item['allergens'])) : ?><p class="dmmr-allergens">Alérgenos: <?php echo esc_html(implode(', ', $item['allergens'])); ?></p><?php endif; ?>
+                            </article>
+                        <?php endforeach; ?>
+                    </section>
+                <?php endforeach; ?>
                 <div class="dmmr-floating-controls">
                     <button class="dmmr-fab" data-action="language" data-menu-url="<?php echo esc_url(DMMR_Router::build_menu_url($restaurantSlug, $menuSlug)); ?>">🌐 Idioma</button>
                     <button class="dmmr-fab" data-action="allergens">⚠️ Alérgenos</button>
@@ -88,65 +106,6 @@ class DMMR_Frontend_Renderer
         <?php
 
         return (string) ob_get_clean();
-    }
-
-    private function resolve_menu(string $restaurantSlug, string $menuSlug): ?array
-    {
-        global $wpdb;
-        $restaurants = $wpdb->prefix . 'dmmr_restaurants';
-        $menus = $wpdb->prefix . 'dmmr_menus';
-
-        $menu = $wpdb->get_row($wpdb->prepare(
-            "SELECT m.* FROM {$menus} m INNER JOIN {$restaurants} r ON r.id = m.restaurant_id WHERE r.slug = %s AND m.slug = %s LIMIT 1",
-            $restaurantSlug,
-            $menuSlug
-        ), ARRAY_A);
-
-        if (!is_array($menu)) {
-            return [
-                'id' => 0,
-                'restaurant_id' => 0,
-                'title' => ucfirst($menuSlug),
-                'subtitle' => 'Carta digital',
-                'description' => 'Demo de URL pública por idioma.',
-                'default_locale' => 'es',
-                'design_variant' => 'minimal',
-            ];
-        }
-
-        return $menu;
-    }
-
-    private function resolve_languages(int $menuId, int $restaurantId): array
-    {
-        global $wpdb;
-        $table = $wpdb->prefix . 'dmmr_languages';
-
-        $rows = $wpdb->get_results($wpdb->prepare(
-            "SELECT locale, label FROM {$table} WHERE (menu_id = %d OR (menu_id IS NULL AND restaurant_id = %d)) AND is_active = 1 ORDER BY sort_order ASC",
-            $menuId,
-            $restaurantId
-        ), ARRAY_A);
-
-        if (!$rows) {
-            return ['es' => 'Español', 'en' => 'English', 'fr' => 'Français'];
-        }
-
-        $languages = [];
-        foreach ($rows as $row) {
-            $languages[$row['locale']] = $row['label'];
-        }
-
-        return $languages;
-    }
-
-    private function demo_items(): array
-    {
-        return [
-            ['name' => 'Croquetas', 'price' => '7,50 €', 'allergens' => ['gluten', 'lactosa']],
-            ['name' => 'Ensalada César', 'price' => '10,00 €', 'allergens' => ['huevo', 'lactosa']],
-            ['name' => 'Agua mineral', 'price' => '2,00 €', 'allergens' => []],
-        ];
     }
 
     private function render_not_found(): string

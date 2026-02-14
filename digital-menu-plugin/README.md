@@ -26,4 +26,4 @@ Plugin base para carta digital multi-restaurante, multi-idioma, con importación
 
 ## Estado
 
-Scaffold funcional con routing por URL, selector de idioma y variantes de diseño (fase arquitectura/MVP inicial).
+Versión funcional básica: alta manual desde admin (restaurantes/cartas/idiomas/secciones/items/alérgenos), URLs públicas por idioma y render de carta desde base de datos.
