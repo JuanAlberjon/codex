@@ -1,0 +1,3 @@
+section_slug,section_order,section_title_es,section_title_en,item_type,item_sku,item_external_id,item_order,item_name_es,item_name_en,item_description_es,item_description_en,price_base,price_options,allergen_slugs
+vinos,10,Vinos,Wines,drink,D-1001,ext-drink-1,10,Rioja crianza,Rioja reserva,Tinto de la casa,House red,,"[{""slug"":""copa"",""label"":""Copa"",""amount"":3.50},{""slug"":""botella"",""label"":""Botella"",""amount"":18.00}]",
+refrescos,20,Refrescos,Soft Drinks,drink,D-2001,ext-drink-2,20,Cola,Cola,33cl,33cl,2.80,,
