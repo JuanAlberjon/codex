@@ -1,12 +1,26 @@
 document.addEventListener('click', (event) => {
-  const action = event.target?.dataset?.action;
+  const target = event.target;
+  const action = target?.dataset?.action;
   if (!action) return;
 
   if (action === 'language') {
-    console.log('Abrir selector de idioma configurable');
+    const baseUrl = target.dataset.menuUrl;
+    if (baseUrl) {
+      window.location.href = baseUrl;
+    }
   }
 
   if (action === 'allergens') {
-    console.log('Abrir modal de alérgenos y aplicar filtro hide-if-contains-any');
+    const input = window.prompt('Introduce slugs de alérgenos a evitar separados por coma (ej: gluten,lactosa)');
+    const selected = (input || '')
+      .split(',')
+      .map((slug) => slug.trim())
+      .filter(Boolean);
+
+    document.querySelectorAll('.dmmr-item').forEach((item) => {
+      const itemAllergens = (item.dataset.allergens || '').split(',').map((s) => s.trim()).filter(Boolean);
+      const shouldHide = selected.some((slug) => itemAllergens.includes(slug));
+      item.style.display = shouldHide ? 'none' : '';
+    });
   }
 });

@@ -10,6 +10,7 @@
   - `frontend`: render público, comportamiento de filtros, botones flotantes.
   - `api`: endpoints REST para panel y frontend.
 - **UI admin**: React + WP components (fase v1) o inicialmente WP Admin Forms (MVP).
+- **Publicación frontend**: rutas propias por carta/idioma (sin shortcodes).
 - **Persistencia**: tablas custom (evitar CPT/meta por volumen + consultas complejas de traducciones y alérgenos).
 - **Caching**:
   - Transients/object cache por combinación `restaurant + menu + locale + allergen_fingerprint`.
@@ -154,13 +155,17 @@ Orden de matching configurable:
    - Estado activo visible con chips
    - Botones: Aplicar / Limpiar
 
-## 8) Comportamiento frontend (idioma + alérgenos)
+## 8) Comportamiento frontend (idioma + alérgenos + diseños)
 
 - Idioma por defecto:
   1. Si configuración = navegador y locale activo existe, usarlo.
   2. Si no, usar idioma por defecto de carta.
+- URLs públicas:
+  - Selector de idioma: `/menu/{restaurant_slug}/{menu_slug}/`.
+  - URL por idioma: `/menu/{restaurant_slug}/{menu_slug}/{locale}/`.
 - Cambio de idioma:
-  - Recarga datos por API (`lang=...`) sin recargar página completa.
+  - Desde botón flotante se abre selector (URL raíz de carta) y se navega al locale elegido.
+- Diseños soportados por carta: `minimal`, `cards`, `elegant`.
 - Filtro alérgenos:
   - Multi-selección acumulativa.
   - Oculta items no aptos en cliente (si datos cargados) o reconsulta API con `allergens`.
@@ -173,7 +178,7 @@ Orden de matching configurable:
 - Protección XSS en campos traducidos y HTML permitido limitado.
 - Índices DB para consultas por `restaurant_id`, `menu_id`, `locale`, `slug`.
 - Migraciones versionadas con `dmmr_db_version`.
-- URLs limpias recomendadas: `/{restaurant_slug}/carta/{menu_slug}` mediante rewrite + fallback shortcode.
+- URLs limpias recomendadas: `/menu/{restaurant_slug}/{menu_slug}/` y `/menu/{restaurant_slug}/{menu_slug}/{locale}/` mediante rewrite propio.
 
 ## 10) Plan por fases
 

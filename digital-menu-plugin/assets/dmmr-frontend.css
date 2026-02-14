@@ -1,7 +1,12 @@
-.dmmr-menu {
-  max-width: 960px;
+.dmmr-container {
+  max-width: 980px;
   margin: 0 auto;
   padding: 1rem;
+}
+
+.dmmr-item {
+  padding: .8rem 0;
+  border-bottom: 1px solid #e5e5e5;
 }
 
 .dmmr-floating-controls {
@@ -18,4 +23,26 @@
   padding: .65rem .9rem;
   background: #111;
   color: #fff;
+  cursor: pointer;
+}
+
+.dmmr-design-cards .dmmr-item {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: .8rem;
+  margin-bottom: .7rem;
+}
+
+.dmmr-design-elegant {
+  background: #fffdf7;
+}
+
+.dmmr-design-elegant .dmmr-header h1 {
+  font-family: Georgia, serif;
+  letter-spacing: .5px;
+}
+
+.dmmr-language-selector-page ul {
+  list-style: none;
+  padding: 0;
 }

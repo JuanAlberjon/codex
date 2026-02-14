@@ -36,6 +36,7 @@ class DMMR_Installer
                 anchor_label VARCHAR(190) NULL,
                 anchor_url VARCHAR(255) NULL,
                 default_locale VARCHAR(10) NOT NULL DEFAULT 'es',
+                design_variant VARCHAR(30) NOT NULL DEFAULT 'minimal',
                 is_published TINYINT(1) NOT NULL DEFAULT 0,
                 created_at DATETIME NOT NULL,
                 updated_at DATETIME NOT NULL,
@@ -147,5 +148,10 @@ class DMMR_Installer
         }
 
         add_option('dmmr_db_version', DMMR_VERSION);
+
+        if (class_exists('DMMR_Router')) {
+            (new DMMR_Router())->add_rewrite_rules();
+        }
+        flush_rewrite_rules();
     }
 }

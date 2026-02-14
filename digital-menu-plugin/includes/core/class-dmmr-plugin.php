@@ -22,6 +22,7 @@ class DMMR_Plugin
         (new DMMR_Roles())->register();
         (new DMMR_Admin_Menu())->register();
         (new DMMR_Rest_Api())->register();
+        (new DMMR_Router())->register();
         (new DMMR_Frontend_Renderer())->register();
         (new DMMR_Csv_Importer())->register();
     }
